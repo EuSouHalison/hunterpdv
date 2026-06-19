@@ -13,6 +13,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Rebuild native packages for Linux platform
+RUN npm rebuild
+
 # Generate Prisma client
 RUN npx prisma generate
 
