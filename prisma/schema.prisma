@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+enum Category {
+  CLOTHING
+  BAGS
+  SHOES
+  ACCESSORIES
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  CREDIT_STORE
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+  PENDING
+}
+
+enum MovementType {
+  ENTRY
+  EXIT
+  ADJUSTMENT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(CASHIER)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sales     Sale[]
+  stockMoves StockMovement[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  sku         String           @unique
+  price       Decimal          @db.Decimal(10, 2)
+  cost        Decimal          @db.Decimal(10, 2)
+  category    Category
+  imageUrl    String?
+  active      Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  variants    ProductVariant[]
+  saleItems   SaleItem[]
+  stockMoves  StockMovement[]
+
+  @@map("products")
+}
+
+model ProductVariant {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size      String?
+  color     String?
+  sku       String  @unique
+  stock     Int     @default(0)
+  minStock  Int     @default(5)
+
+  @@map("product_variants")
+}
+
+model Customer {
+  id            String         @id @default(cuid())
+  name          String
+  cpf           String         @unique
+  phone         String
+  email         String?
+  address       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sales         Sale[]
+  creditAccount CreditAccount?
+
+  @@map("customers")
+}
+
+model CreditAccount {
+  id         String          @id @default(cuid())
+  customerId String          @unique
+  customer   Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  limit      Decimal         @db.Decimal(10, 2)
+  balance    Decimal         @default(0) @db.Decimal(10, 2)
+  dueDay     Int             @default(10)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  payments   CreditPayment[]
+
+  @@map("credit_accounts")
+}
+
+model CreditPayment {
+  id        String        @id @default(cuid())
+  accountId String
+  account   CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(10, 2)
+  dueDate   DateTime
+  paidDate  DateTime?
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("credit_payments")
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  total         Decimal       @db.Decimal(10, 2)
+  discount      Decimal       @default(0) @db.Decimal(10, 2)
+  paymentMethod PaymentMethod
+  status        SaleStatus    @default(COMPLETED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  subtotal  Decimal @db.Decimal(10, 2)
+
+  @@map("sale_items")
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  type      MovementType
+  quantity  Int
+  reason    String?
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@map("stock_movements")
+}

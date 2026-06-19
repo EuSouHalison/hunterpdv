@@ -1,36 +1,140 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HunterPDV - Sistema de Ponto de Venda
 
-## Getting Started
+Sistema completo para gestão de loja de roupas, bolsas e acessórios.
 
-First, run the development server:
+## Funcionalidades
+
+- **Produtos**: Cadastro completo com variantes (tamanho/cor), categorias, SKUs
+- **Estoque**: Entradas/saídas, alertas de estoque baixo, histórico de movimentações
+- **PDV**: Interface de venda rápida com carrinho, múltiplas formas de pagamento
+- **Clientes**: Cadastro completo com CPF, telefone, endereço
+- **Crediário**: Limite de crédito, parcelas, controle de inadimplência
+- **Relatórios**: Vendas por período, produtos mais vendidos, formas de pagamento
+- **Offline**: PWA com funcionamento offline e sincronização automática
+
+## Tecnologias
+
+- **Frontend**: Next.js 14+ (App Router) + TypeScript + Tailwind CSS
+- **Backend**: Next.js API Routes + Prisma ORM
+- **Banco**: PostgreSQL 15+
+- **Auth**: NextAuth.js (JWT + sessions)
+- **Offline**: PWA com Service Worker + IndexedDB
+- **Deploy**: Docker + Docker Compose + Nginx
+
+## Pré-requisitos
+
+- Node.js 18+
+- PostgreSQL 15+
+- Docker e Docker Compose (para deploy)
+
+## Instalação Local
 
 ```bash
+# Clonar repositório
+git clone https://github.com/seu-usuario/hunterpdv.git
+cd hunterpdv
+
+# Instalar dependências
+npm install
+
+# Configurar variáveis de ambiente
+cp .env.example .env
+# Editar .env com suas credenciais
+
+# Gerar cliente Prisma
+npm run db:generate
+
+# Criar banco de dados
+npm run db:push
+
+# Popula o banco com dados de exemplo
+npm run db:seed
+
+# Iniciar servidor de desenvolvimento
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Acesse: http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deploy na VPS Hostinger
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Conectar na VPS
+ssh root@seu-ip
 
-## Learn More
+# Instalar Docker
+curl -fsSL https://get.docker.com | sh
 
-To learn more about Next.js, take a look at the following resources:
+# Clonar repositório
+git clone https://github.com/seu-usuario/hunterpdv.git
+cd hunterpdv
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Executar script de deploy
+chmod +x deploy.sh
+./deploy.sh
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Credenciais Padrão
 
-## Deploy on Vercel
+- **Email**: admin@hunterpdv.com
+- **Senha**: admin123
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Estrutura do Projeto
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+hunterpdv/
+├── src/
+│   ├── app/                    # App Router (Next.js 14+)
+│   │   ├── (auth)/             # Login, registro
+│   │   ├── (dashboard)/        # Dashboard principal
+│   │   ├── produtos/           # Cadastro de produtos
+│   │   ├── estoque/            # Entradas e saídas
+│   │   ├── clientes/           # Cadastro de clientes
+│   │   ├── crediario/          # Gestão de crédito
+│   │   ├── pdv/                # Ponto de venda
+│   │   ├── relatorios/         # Relatórios
+│   │   └── api/                # API Routes
+│   ├── components/             # Componentes reutilizáveis
+│   ├── lib/                    # Utilitários
+│   └── types/                  # TypeScript types
+├── prisma/
+│   └── schema.prisma           # Schema do banco
+├── public/
+│   ├── manifest.json           # PWA manifest
+│   └── sw.js                   # Service Worker
+├── docker-compose.yml
+├── Dockerfile
+└── .env.example
+```
+
+## Comandos Úteis
+
+```bash
+# Desenvolvimento
+npm run dev
+
+# Build
+npm run build
+
+# Produção
+npm start
+
+# Banco de dados
+npm run db:generate    # Gerar cliente Prisma
+npm run db:push        # Sincronizar schema
+npm run db:migrate     # Criar migração
+npm run db:seed        # Popular banco
+npm run db:studio      # Interface do banco
+
+# Docker
+npm run docker:up      # Iniciar containers
+npm run docker:down    # Parar containers
+npm run docker:build   # Rebuild containers
+
+# Deploy completo
+npm run deploy
+```
+
+## Licença
+
+MIT
