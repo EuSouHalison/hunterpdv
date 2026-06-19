@@ -2,14 +2,17 @@ FROM node:18-slim AS base
 
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy only package files
+COPY package.json ./
 
-# Remove existing node_modules and reinstall for Linux platform
-RUN rm -rf node_modules && npm install
+# Install dependencies WITHOUT lock file to get Linux-native binaries
+RUN npm install --ignore-scripts
 
 # Copy source code
 COPY . .
+
+# Install again with scripts (prisma needs this)
+RUN npm install
 
 # Generate Prisma client
 RUN npx prisma generate
