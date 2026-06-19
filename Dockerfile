@@ -1,28 +1,24 @@
 FROM node:18-slim AS base
 
-# Install dependencies only when needed
-FROM base AS deps
 WORKDIR /app
 
+# Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci
 
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+# Remove existing node_modules and reinstall for Linux platform
+RUN rm -rf node_modules && npm install
+
+# Copy source code
 COPY . .
-
-# Rebuild native packages for Linux platform
-RUN npm rebuild
 
 # Generate Prisma client
 RUN npx prisma generate
 
+# Build Next.js
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# Production image
+FROM node:18-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -30,17 +26,13 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=builder /app/public ./public
+COPY --from=base /app/public ./public
+COPY --from=base /app/.next/standalone ./
+COPY --from=base /app/.next/static ./.next/static
+COPY --from=base /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=base /app/node_modules/@prisma ./node_modules/@prisma
 
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+RUN mkdir .next && chown nextjs:nodejs .next
 
 USER nextjs
 
